@@ -1,4 +1,3 @@
-```php
 <?php
 
 $students = [
@@ -42,5 +41,5 @@ $averageScore = $totalScore / count($students);
 echo "Điểm trung bình của tất cả sinh viên: " . $averageScore;
 
 ?>
-```
+
 
