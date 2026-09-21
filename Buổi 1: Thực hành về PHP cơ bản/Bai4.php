@@ -1,4 +1,5 @@
 <?php
+
 class Student
 {
     // Thuộc tính
@@ -46,11 +47,13 @@ class Student
     }
 }
 
+
 // Tạo các object Student
 $student1 = new Student("Nguyen Van An", 20, 8.5);
 $student2 = new Student("Tran Thi Binh", 21, 6.5);
 $student3 = new Student("Le Van Cuong", 19, 4.5);
 $student4 = new Student("Pham Thi Dung", 20, 7.5);
+
 
 // Tạo danh sách các object Student
 $students = [
@@ -59,6 +62,7 @@ $students = [
     $student3,
     $student4
 ];
+
 
 // Function tìm sinh viên có điểm cao nhất
 function findBestStudent($students)
@@ -74,6 +78,7 @@ function findBestStudent($students)
     return $bestStudent;
 }
 
+
 // Function đếm số sinh viên đạt
 function countPassedStudents($students)
 {
@@ -87,6 +92,7 @@ function countPassedStudents($students)
 
     return $count;
 }
+
 
 // Function tính điểm trung bình
 function calculateAverageScore($students)
@@ -108,6 +114,7 @@ foreach ($students as $student) {
     $student->display();
 }
 
+
 // Tìm sinh viên có điểm cao nhất
 $bestStudent = findBestStudent($students);
 
@@ -115,11 +122,13 @@ echo "<h3>Sinh viên có điểm cao nhất</h3>";
 echo "Họ tên: " . $bestStudent->name . "<br>";
 echo "Điểm: " . $bestStudent->score . "<br><br>";
 
+
 // Đếm số sinh viên đạt
 $passedCount = countPassedStudents($students);
 
 echo "<h3>Số sinh viên đạt</h3>";
 echo $passedCount . "<br><br>";
+
 
 // Tính điểm trung bình
 $averageScore = calculateAverageScore($students);
