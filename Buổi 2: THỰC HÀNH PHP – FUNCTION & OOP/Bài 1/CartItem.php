@@ -1,3 +1,4 @@
+<?php
 class CartItem
 {
     private $name;
