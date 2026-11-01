@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Thông tin sinh viên</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f2f2f2;
+        }
+
+        .card {
+            width: 350px;
+            margin: 30px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+        }
+
+        .gioi { color: green; }
+        .kha { color: blue; }
+        .trungbinh { color: orange; }
+        .chuadat { color: red; }
+    </style>
+</head>
+
+<body>
+
+<div id="app">
+    <div class="card">
+        <h2>THÔNG TIN SINH VIÊN</h2>
+
+        <img v-bind:src="anh" v-bind:alt="hoTen">
+
+        <p>Mã sinh viên: {{ maSV }}</p>
+        <p>Họ tên: {{ hoTen }}</p>
+        <p>Lớp: <span v-text="lop"></span></p>
+        <p>Điểm trung bình: {{ diemTB }}</p>
+
+        <p>
+            Xếp loại:
+            <span :class="xepLoaiClass">{{ xepLoai }}</span>
+        </p>
+
+        <p v-if="dangHoc">Trạng thái: Đang học</p>
+        <p v-else>Trạng thái: Đã nghỉ</p>
+
+        <button @click="hienThi = !hienThi">
+            Bật / Tắt giới thiệu
+        </button>
+
+        <p v-show="hienThi">
+            Xin chào! Tôi là {{ hoTen }}.
+            Tôi đang học lớp {{ lop }}.
+        </p>
+    </div>
+</div>
+
+<script>
+const app = Vue.createApp({
+    data() {
+        return {
+            maSV: "23001910",
+            hoTen: "Nguyễn Thị Hồng Ngọc",
+            lop: "K68E1",
+            anh: "https://via.placeholder.com/120",
+            diemTB: 8.5,
+            dangHoc: true,
+            hienThi: false
+        };
+    },
+
+    computed: {
+        xepLoai() {
+            if (this.diemTB >= 8 && this.diemTB <= 10) {
+                return "Giỏi";
+            } else if (this.diemTB >= 6.5) {
+                return "Khá";
+            } else if (this.diemTB >= 5) {
+                return "Trung bình";
+            } else {
+                return "Chưa đạt";
+            }
+        },
+
+        xepLoaiClass() {
+            if (this.diemTB >= 8 && this.diemTB <= 10) {
+                return "gioi";
+            } else if (this.diemTB >= 6.5) {
+                return "kha";
+            } else if (this.diemTB >= 5) {
+                return "trungbinh";
+            } else {
+                return "chuadat";
+            }
+        }
+    }
+});
+
+app.mount("#app");
+</script>
+
+</body>
+</html>

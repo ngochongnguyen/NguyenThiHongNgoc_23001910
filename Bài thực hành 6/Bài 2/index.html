@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đặt vé xem phim</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f2f2f2;
+        }
+
+        .container {
+            width: 450px;
+            margin: 30px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        input, select {
+            padding: 8px;
+            margin: 8px 0;
+        }
+
+        button {
+            padding: 8px 12px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        .result {
+            background: #e5f5e5;
+            padding: 12px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="app">
+    <div class="container">
+        <h2>ĐẶT VÉ XEM PHIM</h2>
+
+        <form @submit.prevent="datVe">
+
+            <p>Họ tên khách hàng:</p>
+            <input type="text" v-model.trim="hoTen">
+
+            <p>Chọn suất chiếu:</p>
+            <select v-model="suatChieu">
+                <option value="09:00">09:00</option>
+                <option value="14:00">14:00</option>
+                <option value="19:00">19:00</option>
+            </select>
+
+            <p>Loại vé:</p>
+            <label>
+                <input type="radio" value="70000" v-model.number="giaVe">
+                Vé thường (70.000đ)
+            </label>
+
+            <br>
+
+            <label>
+                <input type="radio" value="100000" v-model.number="giaVe">
+                Vé VIP (100.000đ)
+            </label>
+
+            <p>Số lượng vé:</p>
+            <input type="number" v-model.number="soLuong" min="1" max="10">
+
+            <p>
+                <input type="checkbox" v-model="combo">
+                Combo bắp nước (45.000đ)
+            </p>
+
+            <h3>
+                Tổng tiền: {{ tongTien.toLocaleString('vi-VN') }} đồng
+            </h3>
+
+            <button type="button" @click="tang">Tăng</button>
+            <button type="button" @click="giam">Giảm</button>
+            <button type="button" @click="datLai">Đặt lại</button>
+
+            <button type="submit" :disabled="!hopLe">
+                Đặt vé
+            </button>
+        </form>
+
+        <p v-if="!soLuongHopLe" style="color:red">
+            Số lượng phải là số nguyên từ 1 đến 10.
+        </p>
+
+        <div v-if="daDat" class="result">
+            <h3>ĐẶT VÉ THÀNH CÔNG</h3>
+            <p>Khách hàng: {{ xacNhan.hoTen }}</p>
+            <p>Suất chiếu: {{ xacNhan.suatChieu }}</p>
+            <p>Loại vé: {{ xacNhan.loaiVe }}</p>
+            <p>Số lượng: {{ xacNhan.soLuong }}</p>
+            <p>Combo: {{ xacNhan.combo }}</p>
+            <p>Tổng tiền: {{ xacNhan.tongTien.toLocaleString('vi-VN') }} đồng</p>
+        </div>
+    </div>
+</div>
+
+<script>
+const app = Vue.createApp({
+    data() {
+        return {
+            hoTen: "",
+            suatChieu: "19:00",
+            giaVe: 70000,
+            soLuong: 1,
+            combo: false,
+            daDat: false,
+            xacNhan: {}
+        };
+    },
+
+    computed: {
+        soLuongHopLe() {
+            return Number.isInteger(this.soLuong)
+                && this.soLuong >= 1
+                && this.soLuong <= 10;
+        },
+
+        hopLe() {
+            return this.hoTen.trim() !== "" && this.soLuongHopLe;
+        },
+
+        tongTien() {
+            return this.giaVe * this.soLuong
+                + (this.combo ? 45000 : 0);
+        },
+
+        loaiVe() {
+            return this.giaVe === 100000 ? "VIP" : "Thường";
+        }
+    },
+
+    methods: {
+        tang() {
+            if (this.soLuong < 10) {
+                this.soLuong++;
+            }
+        },
+
+        giam() {
+            if (this.soLuong > 1) {
+                this.soLuong--;
+            }
+        },
+
+        datLai() {
+            this.hoTen = "";
+            this.suatChieu = "19:00";
+            this.giaVe = 70000;
+            this.soLuong = 1;
+            this.combo = false;
+            this.daDat = false;
+            this.xacNhan = {};
+        },
+
+        datVe() {
+            if (!this.hopLe) return;
+
+            this.xacNhan = {
+                hoTen: this.hoTen,
+                suatChieu: this.suatChieu,
+                loaiVe: this.loaiVe,
+                soLuong: this.soLuong,
+                combo: this.combo ? "Có" : "Không",
+                tongTien: this.tongTien
+            };
+
+            this.daDat = true;
+        }
+    }
+});
+
+app.mount("#app");
+</script>
+
+</body>
+</html>

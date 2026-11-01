@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý công việc</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f2f2f2;
+        }
+
+        .container {
+            width: 500px;
+            margin: 30px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        input[type="text"] {
+            padding: 8px;
+            width: 65%;
+        }
+
+        button {
+            padding: 8px 12px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        li {
+            margin: 12px 0;
+        }
+
+        .done {
+            text-decoration: line-through;
+            color: gray;
+        }
+
+        .active {
+            background: #2563eb;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="app">
+    <div class="container">
+        <h2>QUẢN LÝ CÔNG VIỆC</h2>
+
+        <form @submit.prevent="themCongViec">
+            <input
+                type="text"
+                v-model.trim="tenMoi"
+                placeholder="Nhập công việc..."
+            >
+            <button type="submit">Thêm</button>
+        </form>
+
+        <p>Tổng số công việc: {{ tongCongViec }}</p>
+        <p>Số việc chưa hoàn thành: {{ soViecChuaHoanThanh }}</p>
+
+        <button
+            v-for="muc in cacBoLoc"
+            :key="muc.value"
+            :class="{ active: boLoc === muc.value }"
+            @click="boLoc = muc.value"
+        >
+            {{ muc.label }}
+        </button>
+
+        <p v-if="congViec.length === 0">
+            Bạn chưa có công việc nào.
+        </p>
+
+        <p v-else-if="congViecHienThi.length === 0">
+            Không có công việc phù hợp với bộ lọc.
+        </p>
+
+        <ul v-else>
+            <li v-for="cv in congViecHienThi" :key="cv.id">
+                <input type="checkbox" v-model="cv.hoanThanh">
+
+                <span :class="{ done: cv.hoanThanh }">
+                    {{ cv.ten }}
+                </span>
+
+                <button @click="xoaCongViec(cv.id)">Xóa</button>
+            </li>
+        </ul>
+
+        <button @click="xoaViecDaHoanThanh">
+            Xóa các việc đã hoàn thành
+        </button>
+    </div>
+</div>
+
+<script>
+const app = Vue.createApp({
+    data() {
+        return {
+            tenMoi: "",
+            boLoc: "tatCa",
+
+            congViec: [
+                { id: 1, ten: "Ôn tập VueJS", hoanThanh: false },
+                { id: 2, ten: "Làm bài thực hành", hoanThanh: true }
+            ],
+
+            idTiepTheo: 3,
+
+            cacBoLoc: [
+                { value: "tatCa", label: "Tất cả" },
+                { value: "chuaHoanThanh", label: "Chưa hoàn thành" },
+                { value: "daHoanThanh", label: "Đã hoàn thành" }
+            ]
+        };
+    },
+
+    computed: {
+        tongCongViec() {
+            return this.congViec.length;
+        },
+
+        soViecChuaHoanThanh() {
+            return this.congViec.filter(cv => !cv.hoanThanh).length;
+        },
+
+        congViecHienThi() {
+            if (this.boLoc === "chuaHoanThanh") {
+                return this.congViec.filter(cv => !cv.hoanThanh);
+            } else if (this.boLoc === "daHoanThanh") {
+                return this.congViec.filter(cv => cv.hoanThanh);
+            }
+
+            return this.congViec;
+        }
+    },
+
+    methods: {
+        themCongViec() {
+            if (this.tenMoi.trim() === "") {
+                return;
+            }
+
+            this.congViec.push({
+                id: this.idTiepTheo,
+                ten: this.tenMoi,
+                hoanThanh: false
+            });
+
+            this.idTiepTheo++;
+            this.tenMoi = "";
+        },
+
+        xoaCongViec(id) {
+            this.congViec = this.congViec.filter(cv => cv.id !== id);
+        },
+
+        xoaViecDaHoanThanh() {
+            this.congViec = this.congViec.filter(cv => !cv.hoanThanh);
+        }
+    }
+});
+
+app.mount("#app");
+</script>
+
+</body>
+</html>
