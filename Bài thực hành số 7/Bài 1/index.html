@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài 1 - Quản lý sản phẩm Vue 3</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="app" class="container">
+
+        <header class="page-header">
+            <h1>QUẢN LÝ SẢN PHẨM</h1>
+            <p>Vue 3 - Directive, Methods, Computed, Watch, Mounted</p>
+            <span class="page-status">
+                Trạng thái: {{ pageStatus }}
+            </span>
+        </header>
+
+        <!-- Tìm kiếm, lọc và sắp xếp -->
+        <section class="panel">
+            <h2>Tìm kiếm và lọc sản phẩm</h2>
+
+            <div class="filter-group">
+
+                <div class="form-group">
+                    <label for="search">Tìm theo tên sản phẩm</label>
+                    <input
+                        id="search"
+                        type="text"
+                        v-model="keyword"
+                        placeholder="Nhập tên sản phẩm..."
+                    >
+                    <small v-if="searchNotice" class="warning">
+                        {{ searchNotice }}
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="category">Danh mục</label>
+                    <select id="category" v-model="selectedCategory">
+                        <option value="">Tất cả danh mục</option>
+                        <option
+                            v-for="category in categories"
+                            :key="category"
+                            :value="category"
+                        >
+                            {{ category }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="sort">Sắp xếp theo giá</label>
+                    <select id="sort" v-model="sortOrder">
+                        <option value="">Mặc định</option>
+                        <option value="asc">Giá tăng dần</option>
+                        <option value="desc">Giá giảm dần</option>
+                    </select>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Thống kê -->
+        <section class="stats">
+            <div class="stat-card">
+                <h3>Sản phẩm đang hiển thị</h3>
+                <p>{{ displayedCount }} / {{ products.length }}</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Tổng giá trị tồn kho</h3>
+                <p>{{ formatCurrency(totalInventoryValue) }}</p>
+            </div>
+        </section>
+
+        <!-- Thêm sản phẩm -->
+        <section class="panel">
+            <h2>Thêm sản phẩm mới</h2>
+
+            <form @submit.prevent="addProduct">
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label for="productName">Tên sản phẩm</label>
+                        <input
+                            id="productName"
+                            type="text"
+                            v-model="newProduct.name"
+                            placeholder="Nhập tên sản phẩm"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="price">Giá (VNĐ)</label>
+                        <input
+                            id="price"
+                            type="number"
+                            v-model="newProduct.price"
+                            min="0.01"
+                            step="any"
+                            placeholder="Nhập giá"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newCategory">Danh mục</label>
+                        <select id="newCategory" v-model="newProduct.category">
+                            <option value="Điện tử">Điện tử</option>
+                            <option value="Thời trang">Thời trang</option>
+                            <option value="Gia dụng">Gia dụng</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="stock">Số lượng tồn</label>
+                        <input
+                            id="stock"
+                            type="number"
+                            v-model="newProduct.stock"
+                            min="0"
+                            step="1"
+                            placeholder="Nhập số lượng"
+                        >
+                    </div>
+
+                </div>
+
+                <p v-if="formError" class="error">
+                    {{ formError }}
+                </p>
+
+                <button type="submit" class="btn-add">
+                    + Thêm sản phẩm
+                </button>
+
+            </form>
+        </section>
+
+        <!-- Bảng sản phẩm -->
+        <section class="panel">
+            <h2>Danh sách sản phẩm</h2>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Giá</th>
+                            <th>Danh mục</th>
+                            <th>Tồn kho</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr v-for="product in filteredProducts" :key="product.id">
+                            <td>{{ product.id }}</td>
+                            <td>{{ product.name }}</td>
+                            <td>{{ formatCurrency(product.price) }}</td>
+                            <td>{{ product.category }}</td>
+                            <td>{{ product.stock }}</td>
+
+                            <td>
+                                <span
+                                    :class="product.stock > 0 ? 'in-stock' : 'out-stock'"
+                                >
+                                    {{ product.stock > 0 ? 'Còn hàng' : 'Hết hàng' }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <button
+                                    class="btn-delete"
+                                    @click="deleteProduct(product.id)"
+                                >
+                                    Xóa
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr v-if="filteredProducts.length === 0">
+                            <td colspan="7" class="empty">
+                                Không tìm thấy sản phẩm phù hợp!
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <footer>
+            <p>Bài thực hành số 7 - Bài 1 | Vue 3</p>
+        </footer>
+
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="app.js"></script>
+
+</body>
+</html>
