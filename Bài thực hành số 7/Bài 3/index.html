@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài 3 - Giỏ hàng Vue 3</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div id="app" class="container">
+
+        <header class="header">
+            <h1>GIỎ HÀNG CỦA BẠN</h1>
+            <p>Bài 3 - Vue 3 Props và $emit</p>
+        </header>
+
+        <main class="cart-section">
+
+            <h2>Danh sách sản phẩm</h2>
+
+            <div v-if="cart.length > 0">
+
+                <dong-gio-hang
+                    v-for="product in cart"
+                    :key="product.id"
+                    :id="product.id"
+                    :ten="product.ten"
+                    :don-gia="product.donGia"
+                    :so-luong="product.soLuong"
+                    @doi-so-luong="doiSoLuong"
+                    @yeu-cau-xoa="xoaSanPham"
+                ></dong-gio-hang>
+
+                <div class="cart-summary">
+                    <h2>Thông tin giỏ hàng</h2>
+
+                    <p>
+                        Tổng số lượng:
+                        <strong>{{ tongSoLuong }}</strong>
+                    </p>
+
+                    <p>
+                        Tổng tiền:
+                        <strong class="total-price">
+                            {{ formatCurrency(tongTien) }}
+                        </strong>
+                    </p>
+                </div>
+
+            </div>
+
+            <div v-else class="empty-cart">
+                <h2>Giỏ hàng trống</h2>
+                <p>Hiện tại chưa có sản phẩm nào trong giỏ hàng.</p>
+            </div>
+
+        </main>
+
+        <footer>
+            Bài thực hành số 7 - Bài 3 | Vue 3
+        </footer>
+
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="components/DongGioHang.js"></script>
+    <script src="app.js"></script>
+
+</body>
+</html>
