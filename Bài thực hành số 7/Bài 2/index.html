@@ -1,0 +1,61 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài 2 - Danh mục sản phẩm Vue 3</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="app" class="container">
+
+        <header class="header">
+            <h1>DANH MỤC SẢN PHẨM</h1>
+            <p>Bài 2 - Vue 3 Component, Props và Data</p>
+        </header>
+
+        <section class="product-section">
+
+            <h2>Sản phẩm của chúng tôi</h2>
+
+            <p class="intro">
+                Khám phá danh sách sản phẩm và xem thông tin chi tiết.
+            </p>
+
+            <div class="product-list">
+
+                <the-san-pham
+                    v-for="product in products"
+                    :key="product.id"
+                    :ten="product.ten"
+                    :gia="product.gia"
+                    :anh="product.anh"
+                    :mo-ta="product.moTa"
+                    :so-luong-ton="product.soLuongTon"
+                    @mua-san-pham="muaSanPham(product.id)"
+                   
+                ></the-san-pham>
+
+            </div>
+
+        </section>
+
+        <footer>
+            Bài thực hành số 7 - Bài 2 | Vue 3
+        </footer>
+
+    </div>
+
+    <!-- Nạp Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- Nạp component trước app.js -->
+    <script src="components/TheSanPham.js"></script>
+
+    <!-- Nạp ứng dụng chính -->
+    <script src="app.js"></script>
+
+</body>
+</html>
