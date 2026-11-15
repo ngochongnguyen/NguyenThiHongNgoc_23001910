@@ -1,12 +1,12 @@
--- Tao co so du lieu
+-- 1. Tao co so du lieu
 CREATE DATABASE product_management
 CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 
--- Su dung database
+-- 2. Su dung database
 USE product_management;
 
--- Tao bang products
+-- 3. Tao bang products
 CREATE TABLE products (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -14,10 +14,12 @@ CREATE TABLE products (
     stock INT NOT NULL CHECK (stock >= 0)
 );
 
--- Them 3 san pham mau
+-- 4. Them 3 san pham mau
 INSERT INTO products (name, price, stock)
 VALUES
-('Bút bi', 5000, 20),
-('Vở ô ly', 12000, 15),
-('Thước kẻ', 8000, 0);
+('But bi', 5000, 20),
+('Vo o ly', 12000, 15),
+('Thuoc ke', 8000, 0);
 
+-- 5. Kiem tra du lieu
+SELECT * FROM products;
