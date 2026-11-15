@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý sản phẩm</title>
+
+    <!-- Vue.js -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        form {
+            margin-bottom: 25px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0 15px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 9px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        .save {
+            background: #198754;
+            color: white;
+        }
+
+        .edit {
+            background: #ffc107;
+        }
+
+        .delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background: #eee;
+        }
+
+        .message {
+            margin: 12px 0;
+            color: #dc3545;
+        }
+    </style>
+</head>
+
+<body>
+<div id="app" class="container">
+
+    <h2>QUẢN LÝ SẢN PHẨM</h2>
+
+    <!-- Thông báo -->
+    <p class="message" v-if="message">
+        {{ message }}
+    </p>
+
+    <!-- Form thêm và sửa sản phẩm -->
+    <h3>{{ isEditing ? 'Sửa sản phẩm' : 'Thêm sản phẩm' }}</h3>
+
+    <form @submit.prevent="saveProduct">
+        <label>Tên sản phẩm</label>
+        <input
+            type="text"
+            v-model="form.name"
+            placeholder="Nhập tên sản phẩm"
+            required
+        >
+
+        <label>Đơn giá</label>
+        <input
+            type="number"
+            v-model.number="form.price"
+            min="1"
+            required
+        >
+
+        <label>Số lượng tồn</label>
+        <input
+            type="number"
+            v-model.number="form.stock"
+            min="0"
+            required
+        >
+
+        <button type="submit" class="save">
+            Lưu
+        </button>
+
+        <button
+            type="button"
+            @click="resetForm"
+            v-if="isEditing"
+        >
+            Hủy sửa
+        </button>
+    </form>
+
+    <hr>
+
+    <!-- Danh sách sản phẩm -->
+    <h3>Danh sách sản phẩm</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tên sản phẩm</th>
+                <th>Đơn giá</th>
+                <th>Số lượng tồn</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr v-for="product in products" :key="product.id">
+                <td>{{ product.id }}</td>
+                <td>{{ product.name }}</td>
+                <td>{{ Number(product.price).toLocaleString('vi-VN') }} đ</td>
+                <td>{{ product.stock }}</td>
+                <td>
+                    <button
+                        class="edit"
+                        @click="editProduct(product)"
+                    >
+                        Sửa
+                    </button>
+
+                    <button
+                        class="delete"
+                        @click="deleteProduct(product.id)"
+                    >
+                        Xóa
+                    </button>
+                </td>
+            </tr>
+
+            <tr v-if="products.length === 0">
+                <td colspan="5">Chưa có sản phẩm nào</td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+
+<script>
+const { createApp } = Vue;
+
+createApp({
+    data() {
+        return {
+            // API của Bài 2
+            apiUrl: "../Bài 2/api/products.php",
+
+            products: [],
+
+            form: {
+                name: "",
+                price: "",
+                stock: ""
+            },
+
+            isEditing: false,
+            editingId: null,
+            message: ""
+        };
+    },
+
+    methods: {
+        // Goi API lay danh sach san pham
+        async loadProducts() {
+            try {
+                const response = await fetch(this.apiUrl);
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(
+                        result.message || "Khong the tai danh sach san pham"
+                    );
+                }
+
+                this.products = result.data || [];
+                this.message = "";
+
+            } catch (error) {
+                this.message = error.message;
+            }
+        },
+
+        // Luu san pham: POST hoac PUT
+        async saveProduct() {
+            try {
+                const name = this.form.name.trim();
+                const price = Number(this.form.price);
+                const stock = Number(this.form.stock);
+
+                if (
+                    name.length < 1 ||
+                    name.length > 100 ||
+                    !Number.isInteger(price) ||
+                    price <= 0 ||
+                    !Number.isInteger(stock) ||
+                    stock < 0
+                ) {
+                    throw new Error("Du lieu san pham khong hop le");
+                }
+
+                const method = this.isEditing ? "PUT" : "POST";
+
+                let url = this.apiUrl;
+
+                if (this.isEditing) {
+                    url += "?id=" + encodeURIComponent(this.editingId);
+                }
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        price: price,
+                        stock: stock
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(
+                        result.message || "Khong the luu san pham"
+                    );
+                }
+
+                this.resetForm();
+                await this.loadProducts();
+
+                this.message = "Luu san pham thanh cong!";
+
+            } catch (error) {
+                this.message = error.message;
+            }
+        },
+
+        // Dua thong tin san pham len form
+        editProduct(product) {
+            this.isEditing = true;
+            this.editingId = product.id;
+
+            this.form = {
+                name: product.name,
+                price: Number(product.price),
+                stock: Number(product.stock)
+            };
+
+            this.message = "";
+        },
+
+        // Xoa san pham
+        async deleteProduct(id) {
+            const confirmed = confirm(
+                "Ban co chac chan muon xoa san pham nay?"
+            );
+
+            if (!confirmed) {
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    this.apiUrl + "?id=" + encodeURIComponent(id),
+                    {
+                        method: "DELETE"
+                    }
+                );
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(
+                        result.message || "Khong the xoa san pham"
+                    );
+                }
+
+                await this.loadProducts();
+                this.message = "Xoa san pham thanh cong!";
+
+            } catch (error) {
+                this.message = error.message;
+            }
+        },
+
+        // Reset form
+        resetForm() {
+            this.form = {
+                name: "",
+                price: "",
+                stock: ""
+            };
+
+            this.isEditing = false;
+            this.editingId = null;
+        }
+    },
+
+    // Goi API khi mo trang
+    mounted() {
+        this.loadProducts();
+    }
+
+}).mount("#app");
+</script>
+
+</body>
+</html>
