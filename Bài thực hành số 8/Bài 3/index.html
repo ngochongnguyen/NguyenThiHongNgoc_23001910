@@ -96,7 +96,10 @@
     <!-- Form thêm và sửa sản phẩm -->
     <h3>{{ isEditing ? 'Sửa sản phẩm' : 'Thêm sản phẩm' }}</h3>
 
-    <form @submit.prevent="saveProduct">
+    <form
+        @submit.prevent="saveProduct"
+        @keydown.enter.prevent="$event.currentTarget.requestSubmit()"
+    >
         <label>Tên sản phẩm</label>
         <input
             type="text"
@@ -158,6 +161,7 @@
                 <td>{{ product.stock }}</td>
                 <td>
                     <button
+                        type="button"
                         class="edit"
                         @click="editProduct(product)"
                     >
@@ -165,6 +169,7 @@
                     </button>
 
                     <button
+                        type="button"
                         class="delete"
                         @click="deleteProduct(product.id)"
                     >
@@ -205,7 +210,7 @@ createApp({
     },
 
     methods: {
-        // Goi API lay danh sach san pham
+        // Lấy danh sách sản phẩm từ API
         async loadProducts() {
             try {
                 const response = await fetch(this.apiUrl);
@@ -213,7 +218,7 @@ createApp({
 
                 if (!response.ok || !result.success) {
                     throw new Error(
-                        result.message || "Khong the tai danh sach san pham"
+                        result.message || "Không thể tải danh sách sản phẩm"
                     );
                 }
 
@@ -225,7 +230,7 @@ createApp({
             }
         },
 
-        // Luu san pham: POST hoac PUT
+        // Lưu sản phẩm: POST hoặc PUT
         async saveProduct() {
             try {
                 const name = this.form.name.trim();
@@ -240,7 +245,7 @@ createApp({
                     !Number.isInteger(stock) ||
                     stock < 0
                 ) {
-                    throw new Error("Du lieu san pham khong hop le");
+                    throw new Error("Dữ liệu sản phẩm không hợp lệ");
                 }
 
                 const method = this.isEditing ? "PUT" : "POST";
@@ -267,21 +272,21 @@ createApp({
 
                 if (!response.ok || !result.success) {
                     throw new Error(
-                        result.message || "Khong the luu san pham"
+                        result.message || "Không thể lưu sản phẩm"
                     );
                 }
 
                 this.resetForm();
                 await this.loadProducts();
 
-                this.message = "Luu san pham thanh cong!";
+                this.message = "Lưu sản phẩm thành công!";
 
             } catch (error) {
                 this.message = error.message;
             }
         },
 
-        // Dua thong tin san pham len form
+        // Đưa thông tin sản phẩm lên form
         editProduct(product) {
             this.isEditing = true;
             this.editingId = product.id;
@@ -295,10 +300,10 @@ createApp({
             this.message = "";
         },
 
-        // Xoa san pham
+        // Xóa sản phẩm
         async deleteProduct(id) {
             const confirmed = confirm(
-                "Ban co chac chan muon xoa san pham nay?"
+                "Bạn có chắc chắn muốn xóa sản phẩm này?"
             );
 
             if (!confirmed) {
@@ -317,19 +322,19 @@ createApp({
 
                 if (!response.ok || !result.success) {
                     throw new Error(
-                        result.message || "Khong the xoa san pham"
+                        result.message || "Không thể xóa sản phẩm"
                     );
                 }
 
                 await this.loadProducts();
-                this.message = "Xoa san pham thanh cong!";
+                this.message = "Xóa sản phẩm thành công!";
 
             } catch (error) {
                 this.message = error.message;
             }
         },
 
-        // Reset form
+        // Đặt lại form
         resetForm() {
             this.form = {
                 name: "",
@@ -342,7 +347,7 @@ createApp({
         }
     },
 
-    // Goi API khi mo trang
+    // Gọi API khi mở trang
     mounted() {
         this.loadProducts();
     }
