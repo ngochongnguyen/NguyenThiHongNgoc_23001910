@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý sản phẩm - Upload ảnh</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #263238;
+            padding: 30px 16px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        header {
+            margin-bottom: 25px;
+        }
+
+        header h1 {
+            color: #263b75;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: #667085;
+        }
+
+        .panel {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 3px 14px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+
+        .panel h2 {
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .field.full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #d0d5dd;
+            border-radius: 7px;
+            font-size: 15px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #526bd1;
+        }
+
+        .preview-box {
+            width: 160px;
+            height: 140px;
+            border: 1px dashed #98a2b3;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: #667085;
+            background: #f9fafb;
+        }
+
+        .preview-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .hint {
+            color: #667085;
+            font-size: 13px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            border: none;
+            border-radius: 7px;
+            padding: 11px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .primary {
+            background: #425bc7;
+            color: white;
+        }
+
+        .secondary {
+            background: #e4e7ec;
+            color: #344054;
+        }
+
+        .edit {
+            background: #fff0c2;
+            color: #8a5b00;
+        }
+
+        .delete {
+            background: #fee4e2;
+            color: #b42318;
+        }
+
+        .message {
+            display: none;
+            padding: 12px;
+            border-radius: 7px;
+            margin-bottom: 18px;
+        }
+
+        .message.success {
+            display: block;
+            background: #e8f7ee;
+            color: #16743b;
+        }
+
+        .message.error {
+            display: block;
+            background: #feeceb;
+            color: #b42318;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+        }
+
+        th, td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #eaecf0;
+            text-align: left;
+        }
+
+        th {
+            background: #f9fafb;
+            color: #475467;
+        }
+
+        .product-image {
+            width: 65px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 7px;
+        }
+
+        .no-image {
+            width: 65px;
+            height: 60px;
+            background: #eaecf0;
+            border-radius: 7px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #667085;
+            font-size: 12px;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 7px;
+        }
+
+        .table-actions button {
+            padding: 8px 10px;
+        }
+
+        .empty {
+            text-align: center;
+            color: #667085;
+            padding: 25px;
+        }
+
+        @media (max-width: 650px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .field.full {
+                grid-column: auto;
+            }
+
+            .panel {
+                padding: 17px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <header>
+        <h1>Quản lý sản phẩm</h1>
+        <p>Thêm, cập nhật sản phẩm và tải ảnh lên hệ thống</p>
+    </header>
+
+    <div id="message" class="message"></div>
+
+    <section class="panel">
+        <h2 id="formTitle">Thêm sản phẩm mới</h2>
+
+        <form id="productForm">
+            <div class="form-grid">
+
+                <div class="field">
+                    <label for="name">Tên sản phẩm</label>
+                    <input
+                        type="text"
+                        id="name"
+                        maxlength="100"
+                        placeholder="Nhập tên sản phẩm"
+                        required
+                    >
+                </div>
+
+                <div class="field">
+                    <label for="price">Giá sản phẩm (VNĐ)</label>
+                    <input
+                        type="number"
+                        id="price"
+                        min="1"
+                        step="1"
+                        placeholder="Nhập giá"
+                        required
+                    >
+                </div>
+
+                <div class="field">
+                    <label for="stock">Số lượng</label>
+                    <input
+                        type="number"
+                        id="stock"
+                        min="0"
+                        step="1"
+                        placeholder="Nhập số lượng"
+                        required
+                    >
+                </div>
+
+                <div class="field">
+                    <label for="image">Ảnh sản phẩm</label>
+                    <input
+                        type="file"
+                        id="image"
+                        accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                    >
+                    <span class="hint">Chỉ nhận JPG, PNG; tối đa 2 MB.</span>
+                </div>
+
+                <div class="field full">
+                    <label>Xem trước ảnh</label>
+                    <div class="preview-box">
+                        <span id="previewText">Chưa chọn ảnh</span>
+                        <img id="previewImage" alt="Ảnh xem trước" hidden>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="primary" id="submitButton">
+                    Thêm sản phẩm
+                </button>
+
+                <button type="button" class="secondary" id="cancelButton" hidden>
+                    Hủy sửa
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <section class="panel">
+        <h2>Danh sách sản phẩm</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Ảnh</th>
+                        <th>Tên sản phẩm</th>
+                        <th>Giá</th>
+                        <th>Số lượng</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+
+                <tbody id="productList">
+                    <tr>
+                        <td colspan="6" class="empty">Đang tải dữ liệu...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</div>
+
+<script>
+    // Đường dẫn API
+    const API_URL = "../Bài 2/api/products.php";
+    const UPLOAD_URL = "../Bài 2/api/upload.php";
+
+    const form = document.getElementById("productForm");
+    const productList = document.getElementById("productList");
+    const messageBox = document.getElementById("message");
+
+    const nameInput = document.getElementById("name");
+    const priceInput = document.getElementById("price");
+    const stockInput = document.getElementById("stock");
+    const imageInput = document.getElementById("image");
+
+    const previewImage = document.getElementById("previewImage");
+    const previewText = document.getElementById("previewText");
+
+    const submitButton = document.getElementById("submitButton");
+    const cancelButton = document.getElementById("cancelButton");
+
+    let editingId = null;
+
+    // Gọi API và đọc JSON
+    async function requestJson(url, options = {}) {
+        const response = await fetch(url, options);
+
+        let result;
+
+        try {
+            result = await response.json();
+        } catch {
+            throw new Error("Máy chủ không trả về dữ liệu JSON hợp lệ.");
+        }
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "Có lỗi xảy ra.");
+        }
+
+        return result;
+    }
+
+    // Hiển thị thông báo
+    function showMessage(message, type = "success") {
+        messageBox.textContent = message;
+        messageBox.className = "message " + type;
+    }
+
+    // Làm sạch dữ liệu trước khi hiển thị trên HTML
+    function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, char => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;"
+        })[char]);
+    }
+
+    // Định dạng tiền Việt Nam
+    function formatPrice(price) {
+        return Number(price).toLocaleString("vi-VN") + " VNĐ";
+    }
+
+    // Lấy danh sách sản phẩm
+    async function loadProducts() {
+        try {
+            const result = await requestJson(API_URL);
+            const products = result.data || [];
+
+            if (products.length === 0) {
+                productList.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty">
+                            Chưa có sản phẩm nào.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            productList.innerHTML = products.map(product => {
+                const image = product.image
+                    ? `<img class="product-image"
+                         src="${escapeHtml(product.image)}"
+                         alt="Ảnh sản phẩm"
+                         onerror="this.hidden=true">`
+                    : `<div class="no-image">Chưa có ảnh</div>`;
+
+                return `
+                    <tr>
+                        <td>${escapeHtml(product.id)}</td>
+                        <td>${image}</td>
+                        <td>${escapeHtml(product.name)}</td>
+                        <td>${formatPrice(product.price)}</td>
+                        <td>${escapeHtml(product.stock)}</td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="edit"
+                                    onclick="editProduct(${Number(product.id)})">
+                                    Sửa
+                                </button>
+
+                                <button class="delete"
+                                    onclick="deleteProduct(${Number(product.id)})">
+                                    Xóa
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join("");
+
+        } catch (error) {
+            productList.innerHTML = `
+                <tr>
+                    <td colspan="6" class="empty">
+                        Không thể tải danh sách: ${escapeHtml(error.message)}
+                    </td>
+                </tr>
+            `;
+        }
+    }
+
+    // Xem trước ảnh khi chọn file
+    imageInput.addEventListener("change", function () {
+        const file = this.files[0];
+
+        if (!file) {
+            previewImage.hidden = true;
+            previewImage.removeAttribute("src");
+            previewText.hidden = false;
+            previewText.textContent = "Chưa chọn ảnh";
+            return;
+        }
+
+        if (!["image/jpeg", "image/png"].includes(file.type)) {
+            showMessage("Chỉ được chọn ảnh JPG hoặc PNG.", "error");
+            this.value = "";
+            return;
+        }
+
+        if (file.size > 2 * 1024 * 1024) {
+            showMessage("Ảnh không được vượt quá 2 MB.", "error");
+            this.value = "";
+            return;
+        }
+
+        previewImage.src = URL.createObjectURL(file);
+        previewImage.hidden = false;
+        previewText.hidden = true;
+    });
+
+    // Upload ảnh cho sản phẩm
+    async function uploadImage(productId, file) {
+        const formData = new FormData();
+
+        formData.append("product_id", productId);
+        formData.append("image", file);
+
+        return await requestJson(UPLOAD_URL, {
+            method: "POST",
+            body: formData
+        });
+    }
+
+    // Thêm hoặc cập nhật sản phẩm
+    form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const selectedFile = imageInput.files[0];
+
+        const product = {
+            name: nameInput.value.trim(),
+            price: Number(priceInput.value),
+            stock: Number(stockInput.value)
+        };
+
+        if (!product.name || !Number.isInteger(product.price)
+            || product.price <= 0 || !Number.isInteger(product.stock)
+            || product.stock < 0) {
+            showMessage("Vui lòng nhập thông tin sản phẩm hợp lệ.", "error");
+            return;
+        }
+
+        submitButton.disabled = true;
+
+        try {
+            let productId;
+
+            if (editingId !== null) {
+                const result = await requestJson(
+                    `${API_URL}?id=${editingId}`,
+                    {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(product)
+                    }
+                );
+
+                productId = editingId;
+            } else {
+                const result = await requestJson(API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(product)
+                });
+
+                productId = result.data.id;
+            }
+
+            // Nếu người dùng chọn ảnh thì upload sau khi lưu sản phẩm
+            if (selectedFile) {
+                await uploadImage(productId, selectedFile);
+            }
+
+            resetForm();
+            await loadProducts();
+
+            showMessage(
+                editingId === null
+                    ? "Thêm sản phẩm thành công!"
+                    : "Cập nhật sản phẩm thành công!"
+            );
+
+        } catch (error) {
+            showMessage(error.message, "error");
+            await loadProducts();
+        } finally {
+            submitButton.disabled = false;
+        }
+    });
+
+    // Đưa thông tin sản phẩm lên form để sửa
+    async function editProduct(id) {
+        try {
+            const result = await requestJson(API_URL);
+            const product = (result.data || []).find(
+                item => Number(item.id) === id
+            );
+
+            if (!product) {
+                throw new Error("Không tìm thấy sản phẩm.");
+            }
+
+            editingId = id;
+
+            nameInput.value = product.name;
+            priceInput.value = product.price;
+            stockInput.value = product.stock;
+
+            imageInput.value = "";
+            previewImage.hidden = true;
+            previewText.hidden = false;
+
+            if (product.image) {
+                previewImage.src = product.image;
+                previewImage.hidden = false;
+                previewText.hidden = true;
+            }
+
+            document.getElementById("formTitle").textContent =
+                "Cập nhật sản phẩm";
+
+            submitButton.textContent = "Lưu thay đổi";
+            cancelButton.hidden = false;
+
+            window.scrollTo({ top: 0, behavior: "smooth" });
+
+        } catch (error) {
+            showMessage(error.message, "error");
+        }
+    }
+
+    // Xóa sản phẩm
+    async function deleteProduct(id) {
+        if (!confirm("Em có chắc chắn muốn xóa sản phẩm này?")) {
+            return;
+        }
+
+        try {
+            await requestJson(`${API_URL}?id=${id}`, {
+                method: "DELETE"
+            });
+
+            await loadProducts();
+            showMessage("Xóa sản phẩm thành công!");
+
+        } catch (error) {
+            showMessage(error.message, "error");
+        }
+    }
+
+    // Đưa form về trạng thái ban đầu
+    function resetForm() {
+        form.reset();
+        editingId = null;
+
+        previewImage.hidden = true;
+        previewImage.removeAttribute("src");
+        previewText.hidden = false;
+        previewText.textContent = "Chưa chọn ảnh";
+
+        document.getElementById("formTitle").textContent =
+            "Thêm sản phẩm mới";
+
+        submitButton.textContent = "Thêm sản phẩm";
+        cancelButton.hidden = true;
+    }
+
+    cancelButton.addEventListener("click", resetForm);
+
+    // Tải dữ liệu khi mở trang
+    loadProducts();
+</script>
+
+</body>
+</html>
