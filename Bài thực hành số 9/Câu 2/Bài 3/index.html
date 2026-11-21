@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý sản phẩm - Phân trang</title>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        .form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        button {
+            padding: 9px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .add-btn {
+            background: #198754;
+        }
+
+        .edit-btn {
+            background: #0d6efd;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+        }
+
+        .cancel-btn {
+            background: #6c757d;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background: #0d6efd;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            background: #0d6efd;
+        }
+
+        .pagination button:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+
+        .message {
+            margin: 15px 0;
+            color: #dc3545;
+            text-align: center;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 20px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 12px;
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 650px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="app">
+    <div class="container">
+
+        <h2>QUẢN LÝ SẢN PHẨM</h2>
+
+        <!-- Form thêm và sửa sản phẩm -->
+        <form class="form" @submit.prevent="saveProduct">
+
+            <input
+                type="text"
+                v-model="form.name"
+                placeholder="Tên sản phẩm"
+                required
+            >
+
+            <input
+                type="number"
+                v-model.number="form.price"
+                placeholder="Giá sản phẩm"
+                min="1"
+                required
+            >
+
+            <input
+                type="number"
+                v-model.number="form.stock"
+                placeholder="Số lượng"
+                min="0"
+                required
+            >
+
+            <button type="submit" class="add-btn">
+                {{ editingId ? 'Cập nhật' : 'Thêm sản phẩm' }}
+            </button>
+
+            <button
+                v-if="editingId"
+                type="button"
+                class="cancel-btn"
+                @click="cancelEdit"
+            >
+                Hủy
+            </button>
+
+        </form>
+
+        <p class="message" v-if="errorMessage">
+            {{ errorMessage }}
+        </p>
+
+        <p v-if="loading">Đang tải dữ liệu...</p>
+
+        <!-- Bảng danh sách sản phẩm -->
+        <table v-if="products.length > 0">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên sản phẩm</th>
+                    <th>Giá</th>
+                    <th>Số lượng</th>
+                    <th>Hình ảnh</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr v-for="product in products" :key="product.id">
+                    <td>{{ product.id }}</td>
+                    <td>{{ product.name }}</td>
+                    <td>{{ Number(product.price).toLocaleString('vi-VN') }} đ</td>
+                    <td>{{ product.stock }}</td>
+
+                    <td>
+                        <img
+                            v-if="product.image"
+                            :src="product.image"
+                            alt="Ảnh sản phẩm"
+                            width="60"
+                        >
+                        <span v-else>Chưa có ảnh</span>
+                    </td>
+
+                    <td>
+                        <button
+                            class="edit-btn"
+                            @click="editProduct(product)"
+                        >
+                            Sửa
+                        </button>
+
+                        <button
+                            class="delete-btn"
+                            @click="deleteProduct(product.id)"
+                        >
+                            Xóa
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="empty" v-else-if="!loading">
+            Chưa có sản phẩm
+        </div>
+
+        <!-- Phân trang -->
+        <div class="pagination">
+
+            <button
+                @click="changePage(page - 1)"
+                :disabled="page <= 1 || loading"
+            >
+                Previous
+            </button>
+
+            <span>
+                Trang {{ page }} / {{ totalPages }}
+                — Tổng {{ total }} sản phẩm
+            </span>
+
+            <button
+                @click="changePage(page + 1)"
+                :disabled="page >= totalPages || loading"
+            >
+                Next
+            </button>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+const { createApp } = Vue;
+
+createApp({
+    data() {
+        return {
+            apiUrl: "../Bài 2/api/products.php",
+
+            products: [],
+            page: 1,
+            limit: 5,
+            total: 0,
+            totalPages: 1,
+
+            loading: false,
+            errorMessage: "",
+
+            editingId: null,
+
+            form: {
+                name: "",
+                price: "",
+                stock: ""
+            }
+        };
+    },
+
+    mounted() {
+        this.loadProducts(1);
+    },
+
+    methods: {
+
+        // Lấy danh sách sản phẩm theo trang
+        async loadProducts(page = this.page) {
+            this.loading = true;
+            this.errorMessage = "";
+
+            try {
+                const response = await fetch(
+                    `${this.apiUrl}?page=${page}&limit=${this.limit}`
+                );
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || "Không thể tải sản phẩm");
+                }
+
+                this.products = result.data || [];
+
+                this.page = result.pagination.page;
+                this.limit = result.pagination.limit;
+                this.total = result.pagination.total;
+                this.totalPages = result.pagination.total_pages;
+
+            } catch (error) {
+                this.errorMessage = error.message;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        // Chuyển trang
+        changePage(newPage) {
+            if (
+                newPage < 1 ||
+                newPage > this.totalPages ||
+                this.loading
+            ) {
+                return;
+            }
+
+            this.loadProducts(newPage);
+        },
+
+        // Thêm hoặc cập nhật sản phẩm
+        async saveProduct() {
+            this.errorMessage = "";
+
+            const product = {
+                name: this.form.name.trim(),
+                price: Number(this.form.price),
+                stock: Number(this.form.stock)
+            };
+
+            if (
+                !product.name ||
+                !Number.isInteger(product.price) ||
+                product.price <= 0 ||
+                !Number.isInteger(product.stock) ||
+                product.stock < 0
+            ) {
+                this.errorMessage = "Vui lòng nhập thông tin sản phẩm hợp lệ";
+                return;
+            }
+
+            const isEditing = this.editingId !== null;
+
+            const url = isEditing
+                ? `${this.apiUrl}?id=${this.editingId}`
+                : this.apiUrl;
+
+            try {
+                const response = await fetch(url, {
+                    method: isEditing ? "PUT" : "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(product)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || "Thao tác thất bại");
+                }
+
+                this.resetForm();
+
+                if (isEditing) {
+                    await this.loadProducts(this.page);
+                } else {
+                    await this.loadProducts(1);
+                }
+
+            } catch (error) {
+                this.errorMessage = error.message;
+            }
+        },
+
+        // Chọn sản phẩm để sửa
+        editProduct(product) {
+            this.editingId = product.id;
+
+            this.form = {
+                name: product.name,
+                price: Number(product.price),
+                stock: Number(product.stock)
+            };
+
+            this.errorMessage = "";
+        },
+
+        // Hủy sửa
+        cancelEdit() {
+            this.resetForm();
+        },
+
+        // Xóa sản phẩm
+        async deleteProduct(id) {
+            if (!confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) {
+                return;
+            }
+
+            this.errorMessage = "";
+
+            try {
+                const response = await fetch(
+                    `${this.apiUrl}?id=${id}`,
+                    {
+                        method: "DELETE"
+                    }
+                );
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || "Xóa sản phẩm thất bại");
+                }
+
+                // API tự điều chỉnh về trang hợp lệ nếu xóa sản phẩm cuối trang
+                await this.loadProducts(this.page);
+
+            } catch (error) {
+                this.errorMessage = error.message;
+            }
+        },
+
+        // Đưa form về trạng thái ban đầu
+        resetForm() {
+            this.editingId = null;
+
+            this.form = {
+                name: "",
+                price: "",
+                stock: ""
+            };
+        }
+    }
+}).mount("#app");
+</script>
+
+</body>
+</html>
